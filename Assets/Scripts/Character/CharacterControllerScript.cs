@@ -19,12 +19,13 @@ public class CharacterControllerScript : MonoBehaviour
     void Start()
     {
         charController = GetComponent<CharacterController>();
+        startTouchPos = Vector2.zero;
     }
 
     void Update()
     {
         HorizontalMovement();
-        //VerticalMovement();
+        VerticalMovement();
     }
 
     private void HorizontalMovement()
@@ -64,7 +65,7 @@ public class CharacterControllerScript : MonoBehaviour
                 startTouchPos = Input.GetTouch(0).position;
                 PlayerShoot.shoot = false;
             }
-            else if (Input.GetTouch(0).phase == TouchPhase.Moved)
+            else if (Input.GetTouch(0).phase == TouchPhase.Moved && startTouchPos != Vector2.zero)
             {
                 //PlayerAnimation.SetRunAnim(true);
                 movementDirectionScreen = (Input.GetTouch(0).position - startTouchPos).normalized;
@@ -88,19 +89,19 @@ public class CharacterControllerScript : MonoBehaviour
 #endif
     }
 
-    //private void VerticalMovement()
-    //{
-    //    if(charController.isGrounded)
-    //    {
-    //        verticalMoveVector = Vector3.zero;
-    //    }
-    //    else
-    //    {
-    //        if(verticalMoveVector.y < GRAVITY)
-    //            verticalMoveVector += Vector3.down * verticalAccel;
-    //    }
+    private void VerticalMovement()
+    {
+        if (charController.isGrounded)
+        {
+            verticalMoveVector = Vector3.zero;
+        }
+        else
+        {
+            if (verticalMoveVector.y < GRAVITY)
+                verticalMoveVector += Vector3.down * verticalAccel;
+        }
 
-    //    charController.Move(verticalMoveVector * Time.deltaTime);
-    //}
+        charController.Move(verticalMoveVector * Time.deltaTime);
+    }
 }
 

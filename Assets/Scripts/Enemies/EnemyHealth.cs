@@ -4,12 +4,19 @@ using UnityEngine;
 
 public class EnemyHealth : MonoBehaviour
 {
-    [SerializeField]
+    public float maxHP;
     private float hp;
+    private GameController gc;
+
     public float HP
     {
         get { return hp; }
-        set { hp = value; if (hp <= 0) Destroy(gameObject); }
+        set { hp = value; if (hp <= 0) OnDeath(); }
+    }
+    private void Start()
+    {
+        gc = FindObjectOfType(typeof(GameController)) as GameController;
+        hp = maxHP;
     }
     private void OnEnable()
     {
@@ -19,16 +26,13 @@ public class EnemyHealth : MonoBehaviour
     private void OnDisable()
     {
         PlayerShoot.enemiesTr.Remove(transform);
-    }
-    // Start is called before the first frame update
-    void Start()
-    {
-        
+        if(HP <= 0) //TEMP
+            gc.CheckForLevelEnd(); //проверяем, не был ли это последний враг
     }
 
-    // Update is called once per frame
-    void Update()
+    private void OnDeath()
     {
-        
+        GetComponent<EnemyDropItem>().SpawnItem();
+        Destroy(gameObject);
     }
 }
