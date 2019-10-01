@@ -4,6 +4,11 @@ using UnityEngine;
 
 public class CharacterControllerScript : MonoBehaviour
 {
+    [HideInInspector]
+    public bool canGoThroughWalls;//абилка ходить сквозь стены
+    public delegate void WalkThroughWalls(bool canWalk);
+    public static event WalkThroughWalls CanWalkThroughWalls;
+
     public GameObject moveDirObj;
     public const float GRAVITY = 5;
     public float verticalAccel;
@@ -102,6 +107,16 @@ public class CharacterControllerScript : MonoBehaviour
         }
 
         charController.Move(verticalMoveVector * Time.deltaTime);
+    }
+
+    public void CanGoThroughWalls()
+    {
+        canGoThroughWalls = !canGoThroughWalls;
+
+        if(canGoThroughWalls)        
+            CanWalkThroughWalls?.Invoke(true);        
+        else
+            CanWalkThroughWalls?.Invoke(false);
     }
 }
 

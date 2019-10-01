@@ -204,7 +204,7 @@ AnimationClip:
   m_HasMotionFloatCurves: 0
   m_Events:
   - time: 0.46666667
-    functionName: Shoot
+    functionName: ChooseTarget
     data: 
     objectReferenceParameter: {fileID: 11500000, guid: 41cd3e7d37fe9b045b11e8e62eb6f78e,
       type: 3}

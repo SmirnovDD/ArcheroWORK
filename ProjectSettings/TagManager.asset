@@ -19,11 +19,11 @@ TagManager:
   - EnemyProjectile
   - Enemy
   - Player
-  - 
-  - 
-  - 
-  - 
-  - 
+  - Obstacles
+  - ObstaclesIgnorePlayer
+  - PlayerProjectile
+  - InnerObstacle
+  - Buffs
   - 
   - 
   - 

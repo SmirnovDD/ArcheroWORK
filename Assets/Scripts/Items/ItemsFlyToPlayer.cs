@@ -27,10 +27,11 @@ public class ItemsFlyToPlayer : MonoBehaviour
     private IEnumerator LerpToPlayer()
     {
         playerTr = GameObject.FindGameObjectWithTag("Player").transform;
+        Vector3 tempPos = transform.position;
         while (lerpTime < 1)
         {
-            transform.position = Vector3.Slerp(transform.position, playerTr.position, lerpTime); //TEMP SPEED
-            lerpTime += 0.2f * Time.deltaTime;
+            transform.position = Vector3.Slerp(tempPos, playerTr.position, lerpTime); //TEMP SPEED
+            lerpTime += 2f * Time.deltaTime;
             yield return null;
         }
     }

@@ -14,8 +14,12 @@ public class EnemiesMovement : MonoBehaviour
     private bool canDamage = true;
 
     private PlayerHealth ph;
+
+    private float frostTimer, spentTimeFrost;
+    private bool isFrostAttacked;
     public enum EnemyMovementType
     {
+        standstill,
         randomStraight
     };
     public EnemyMovementType enemyMovemenType;
@@ -38,6 +42,10 @@ public class EnemiesMovement : MonoBehaviour
         if (enemyMovemenType == EnemyMovementType.randomStraight)
         {
             RandomStraightMovement();
+        }
+        else if(enemyMovemenType == EnemyMovementType.standstill)
+        {
+            //nothing
         }
     }
 
@@ -82,5 +90,31 @@ public class EnemiesMovement : MonoBehaviour
     private void OnCollisionExit(Collision collision)
     {
         canDamage = true;
+    }
+
+    public void GotFrostAttacked(float frostT)
+    {
+        frostTimer = frostT;
+        spentTimeFrost = 0;
+        if (!isFrostAttacked)
+            StartCoroutine(Frost());
+    }
+
+    private IEnumerator Frost()
+    {
+        isFrostAttacked = true;
+        float defaultSpeed = movementSpeed;
+        Material bodyMat = GetComponent<Renderer>().material;
+        Color defaultColor = bodyMat.color;
+        bodyMat.color = Color.blue;
+        movementSpeed *= 0.3f; //TEMP add animator speed 0.3
+        while(spentTimeFrost < frostTimer)
+        {
+            spentTimeFrost += 0.1f;
+            yield return new WaitForSeconds(0.1f);
+        }
+        movementSpeed = defaultSpeed;
+        bodyMat.color = defaultColor;
+        isFrostAttacked = false;
     }
 }

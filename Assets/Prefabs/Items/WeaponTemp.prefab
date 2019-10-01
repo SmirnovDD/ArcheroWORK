@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 3874544867525018632}
   - component: {fileID: 6104349299159913039}
   - component: {fileID: -9020647091375804744}
-  m_Layer: 0
+  m_Layer: 15
   m_Name: WeaponTemp
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -101,7 +101,7 @@ GameObject:
   - component: {fileID: 9194013669852804775}
   - component: {fileID: 2876952200667913488}
   - component: {fileID: 7410313956545460091}
-  m_Layer: 0
+  m_Layer: 15
   m_Name: Cube (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -179,7 +179,7 @@ GameObject:
   - component: {fileID: 4439098919869242529}
   - component: {fileID: 2176317412946308582}
   - component: {fileID: 7358734429278790863}
-  m_Layer: 0
+  m_Layer: 15
   m_Name: Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}

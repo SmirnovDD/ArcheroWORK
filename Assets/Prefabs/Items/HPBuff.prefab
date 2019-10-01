@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 3756668613725426326}
   - component: {fileID: 3756668613725426327}
   - component: {fileID: -5185168425432522439}
-  m_Layer: 0
+  m_Layer: 15
   m_Name: HPBuff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -135,3 +135,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e7db38579fe001c4c9c11679d3a8acee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  itemType: 0
