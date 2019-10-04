@@ -21,6 +21,8 @@ public class PlayerHealth : MonoBehaviour
     }
     public float maxHP;
     public float shieldAmount; //ABILITY 
+    [HideInInspector]
+    public List<Transform> puddlesInTr = new List<Transform>();//предотвращает двойной урон игроку, если он сразу в двух лужах
     private float hp;
 
     private bool shieldActive;

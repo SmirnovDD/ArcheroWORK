@@ -7,11 +7,14 @@ public class EnemyShoot : MonoBehaviour
     public enum ShootType
     {
         plunging,
-        homing
+        homing,
+        aimWithRicochet,
+        straightShotNoAim,
+        burying
     };
     public ShootType shootType;
 
-    public GameObject arrow, homingArrow;
+    public GameObject arrow, homingArrow, ricochetArrow, straightFlightArrow;
     public Transform shootPoint;
 
     private Animator anim;
@@ -22,13 +25,36 @@ public class EnemyShoot : MonoBehaviour
 
     private float frostTimer, spentTimeFrost;
     private bool isFrostAttacked;
-    // Start is called before the first frame update
+
+    private Quaternion targetRotation; //определяет вращение до игрока
+    private float lerpPercent;
+    private LineRenderer lineR; //нужен для визуального отображения полета стрелы, есть только на определенных типах врагов
+    private float aimTime = 1.5f; //TEMP сколько юнит целится с лайн рендерером перед выстрелом, время идет одновременно с анимацией
+    private RaycastHit hit; //то же самое, что в скрипте снаряда
+    private int obstaclesAndPlayerLayerMask = (1 << 10) | (1 << 11) | (1 << 12);
+    private float timer;
     void Start()
     {
         anim = GetComponent<Animator>();
         thisTr = transform;
         playerTr = GameObject.FindGameObjectWithTag("Player").transform;        
         GetComponent<Animator>().SetBool("shoot", true);
+
+        if (shootType == ShootType.aimWithRicochet)
+        {
+            timer = Time.time; //выставляем таймер для прицеливания
+            lineR = GetComponent<LineRenderer>();
+            lineR.SetPosition(0, thisTr.position);
+            lineR.SetPosition(1, playerTr.position);
+        }
+    }
+
+    private void FixedUpdate()
+    {
+        if(shootType == ShootType.aimWithRicochet)
+        {
+            Aim();
+        }
     }
     public void ShootPlayer()
     {
@@ -73,6 +99,24 @@ public class EnemyShoot : MonoBehaviour
             GameObject newArrow = Instantiate(homingArrow, shootPoint.position, Quaternion.identity);
             newArrow.GetComponent<EnemyProjectileFlight>().playerTr = playerTr;
         }
+        else if(shootType == ShootType.aimWithRicochet)
+        {
+            GameObject newArrow = Instantiate(ricochetArrow, shootPoint.position, transform.rotation);
+            lineR.enabled = false;
+            lerpPercent = 0;
+        }
+        else if(shootType == ShootType.straightShotNoAim)
+        {
+            thisTr.LookAt(playerTr);
+            thisTr.rotation = Quaternion.Euler(0, thisTr.rotation.eulerAngles.y, 0);
+            GameObject newArrow = Instantiate(straightFlightArrow, shootPoint.position, transform.rotation);
+        }
+        else if(shootType == ShootType.burying)
+        {
+            thisTr.LookAt(playerTr);
+            thisTr.rotation = Quaternion.Euler(0, thisTr.rotation.eulerAngles.y, 0);
+            GameObject newArrow = Instantiate(straightFlightArrow, shootPoint.position, transform.rotation);
+        }
     }
 
     public void GotFrostAttacked(float frostT)
@@ -81,6 +125,12 @@ public class EnemyShoot : MonoBehaviour
         spentTimeFrost = 0;
         if (!isFrostAttacked)
             StartCoroutine(Frost());
+    }
+
+    public void InitiateAiming() //для типов врагов, которые целятся, вызывается в начале анимации TEMP
+    {
+        lineR.enabled = true;
+        timer = Time.time + aimTime; //заного целимся
     }
 
     private IEnumerator Frost()
@@ -94,5 +144,37 @@ public class EnemyShoot : MonoBehaviour
         }
         anim.speed = 1;
         isFrostAttacked = false;
+    }
+
+    private void Aim()
+    {
+        if (Time.time < timer)
+        {
+            targetRotation = Quaternion.LookRotation(playerTr.position - thisTr.position);
+            lerpPercent += 0.1f * Time.fixedDeltaTime;
+            thisTr.rotation = Quaternion.Lerp(thisTr.rotation, targetRotation, lerpPercent);
+            //thisTr.rotation = Quaternion.Euler(0, thisTr.rotation.eulerAngles.y, 0);
+            Vector3 normal = GetPointOfContactNormal(thisTr.position, thisTr.forward);
+            lineR.SetPosition(1, hit.point);
+            Vector3 reflectVector = Vector3.Reflect(transform.forward, normal);
+            if (hit.collider.gameObject.CompareTag("Obstacle"))
+            {
+                lineR.positionCount = 3;
+                normal = GetPointOfContactNormal(hit.point, reflectVector);
+                lineR.SetPosition(2, hit.point);
+            }
+            else
+                lineR.positionCount = 2;
+        }
+    }
+    private Vector3 GetPointOfContactNormal(Vector3 pos, Vector3 dir)
+    {
+        Ray ray = new Ray(pos, dir);
+        if (Physics.Raycast(ray.origin, ray.direction, out hit, 300, obstaclesAndPlayerLayerMask))
+        {
+            return hit.normal;
+        }
+
+        return Vector3.zero;
     }
 }

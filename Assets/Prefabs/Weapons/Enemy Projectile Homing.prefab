@@ -238,6 +238,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   projectileType: 1
-  angleChangingSpeed: 6
+  angleChangingSpeed: 2
   movementSpeed: 6
   playerTr: {fileID: 0}

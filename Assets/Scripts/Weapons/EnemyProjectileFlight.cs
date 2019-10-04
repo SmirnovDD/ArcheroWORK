@@ -7,7 +7,9 @@ public class EnemyProjectileFlight : MonoBehaviour
     public enum ProjectileType
     {
         regular,
-        homing
+        homing,
+        ricochet,
+        straight
     }
     public ProjectileType projectileType;
     public float angleChangingSpeed;
@@ -16,6 +18,7 @@ public class EnemyProjectileFlight : MonoBehaviour
     public Transform playerTr;
     private Rigidbody rigidB;
     private Vector3 direction;
+    private int ricochetAmount;
     private void Start()
     {
         rigidB = GetComponent<Rigidbody>();
@@ -23,6 +26,10 @@ public class EnemyProjectileFlight : MonoBehaviour
         if(projectileType == ProjectileType.homing)
         {
             direction = (playerTr.position - transform.position).normalized;            
+        }
+        if(projectileType == ProjectileType.ricochet || projectileType == ProjectileType.straight)
+        {
+            rigidB.AddForce(transform.forward * movementSpeed);
         }
     }
     // Update is called once per frame
@@ -39,19 +46,35 @@ public class EnemyProjectileFlight : MonoBehaviour
         if (collision.gameObject.CompareTag("Player"))
         {
             collision.gameObject.GetComponent<PlayerHealth>().TakeDamage(30); //захардкодил пока TEMP
+            Destroy(gameObject);
         }
         else if (collision.gameObject.CompareTag("Enemy"))
         {
             //collision.gameObject.GetComponent<EnemyHealth>().HP -= ;
         }
-        Destroy(gameObject);
+        else if(collision.gameObject.CompareTag("Obstacle"))
+        {
+            if (projectileType == ProjectileType.ricochet)
+            {
+                ricochetAmount++;
+                if (ricochetAmount > 1) //TEMP
+                    Destroy(gameObject);
+            }
+            else
+                Destroy(gameObject);
+        }
     }
 
     private void FlyCloserToPlayer()
     {
         direction = (playerTr.position - transform.position).normalized;
-        float rotateAmount = Vector3.Cross(transform.TransformDirection(direction), transform.up).z;
-        rigidB.angularVelocity = new Vector3(0, -angleChangingSpeed * rotateAmount, 0);
+        float rotateAmount = transform.InverseTransformDirection(Vector3.Cross(direction, transform.up)).z;
+        //float rotateAmountX = transform.InverseTransformDirection(Vector3.Cross(direction, transform.right)).z;
+        //Debug.Log(rotateAmountX);
+        //Debug.DrawRay(transform.position, direction, Color.blue);
+        //Debug.DrawRay(transform.position, transform.InverseTransformDirection(Vector3.right), Color.black);
+        //Debug.DrawRay(transform.position, transform.InverseTransformDirection(Vector3.Cross(direction, transform.up)), Color.red);
+        rigidB.angularVelocity = new Vector3(0, angleChangingSpeed * rotateAmount, 0); //new Vector3(-angleChangingSpeed * rotateAmountX, angleChangingSpeed * rotateAmount, 0);
         rigidB.velocity = transform.forward * movementSpeed;
     }
 }
