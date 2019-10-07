@@ -24,11 +24,14 @@ public class EnemiesMovement : MonoBehaviour
     private bool resetMovement; //чтобы каждый кадр не устанавливать скорость rigidB = 0 и слой
     public List<Collider> borders = new List<Collider>(); //границы уровня, нужны, чтобы закапывающийся враг не вылезал за границы карты
     private CapsuleCollider capsuleCollider; //TEMP может быть другой коллайдер
+
+    private Animator anim;
     public enum EnemyMovementType
     {
         standstill,
         randomStraight,
-        burying
+        burying,
+        flying
     };
     public EnemyMovementType enemyMovemenType;
 
@@ -36,13 +39,22 @@ public class EnemiesMovement : MonoBehaviour
     {
         ph = FindObjectOfType(typeof(PlayerHealth)) as PlayerHealth;
         rigidB = GetComponent<Rigidbody>();
-        if(enemyMovemenType == EnemyMovementType.randomStraight || enemyMovemenType == EnemyMovementType.burying)
+        if (enemyMovemenType == EnemyMovementType.randomStraight || enemyMovemenType == EnemyMovementType.burying)
         {
             intervalBetweenRandomMovement = 3; //TEMP
             movementSpeed = 7; //TEMP
             movementTime = 1f;
             capsuleCollider = GetComponent<CapsuleCollider>();
-        }        
+        }
+        else if(enemyMovemenType == EnemyMovementType.flying)
+        {
+            intervalBetweenRandomMovement = 3; //TEMP
+            movementSpeed = 3; //TEMP
+            movementTime = 2f;
+            capsuleCollider = GetComponent<CapsuleCollider>();
+        }
+
+        anim = GetComponent<Animator>();
         //timer = Time.time + intervalBetweenRandomMovement;        
     }
 
@@ -52,11 +64,15 @@ public class EnemiesMovement : MonoBehaviour
         {
             RandomStraightMovement();
         }
-        else if(enemyMovemenType == EnemyMovementType.burying)
+        else if (enemyMovemenType == EnemyMovementType.burying)
         {
             BuriedRandomStraightMovement();
         }
-        else if(enemyMovemenType == EnemyMovementType.standstill)
+        else if (enemyMovemenType == EnemyMovementType.flying)
+        {
+            FlyingEnemyMovement();
+        }
+        else if (enemyMovemenType == EnemyMovementType.standstill)
         {
             //nothing
         }
@@ -80,7 +96,7 @@ public class EnemiesMovement : MonoBehaviour
                 rigidB.velocity = Vector3.zero;
                 resetMovement = false;
             }
-        }        
+        }
     }
 
     private void BuriedRandomStraightMovement()
@@ -94,6 +110,7 @@ public class EnemiesMovement : MonoBehaviour
             gameObject.layer = 17; //слой, с коллизиями на игрока, препятствия и других врагов, нужен, чтобы он мог "вынырнуть" в нужном месте, при этом в него нельзя было попасть
             Vector3 randomMovementVector = (Vector3.forward * Random.Range(-10, 11) + Vector3.right * Random.Range(-10, 10)).normalized;
             rigidB.velocity = randomMovementVector * movementSpeed;
+            transform.forward = rigidB.velocity;
             timer = Time.time + intervalBetweenRandomMovement;
             movementTimer = Time.time + movementTime;
             canDamage = true;
@@ -108,28 +125,96 @@ public class EnemiesMovement : MonoBehaviour
                 gameObject.layer = 9; //уровень обычных врагов
                 capsuleCollider.isTrigger = false;
                 resetMovement = false;
+                anim.SetTrigger("getOut");
             }
         }
     }
-
-    public void CanBury(bool canBury)
+    private void FlyingEnemyMovement()
     {
-        canMove = canBury;
+        if (Time.time > timer && canMove)
+        {
+            anim.SetBool("isMoving", true);
+            resetMovement = true;
+            rigidB.useGravity = false;
+            capsuleCollider.isTrigger = true;
+            Vector3 randomMovementVector = (Vector3.forward * Random.Range(-10, 11) + Vector3.right * Random.Range(-10, 10)).normalized;
+            rigidB.velocity = randomMovementVector * movementSpeed;
+            transform.forward = rigidB.velocity;
+            timer = Time.time + intervalBetweenRandomMovement;
+            movementTimer = Time.time + movementTime;
+            canDamage = true;
+        }
+        else if (Time.time > movementTimer)
+        {
+            if (resetMovement)
+            {
+                anim.SetBool("isMoving", false);
+                rigidB.useGravity = true;
+                rigidB.velocity = Vector3.zero;
+                capsuleCollider.isTrigger = false;
+                resetMovement = false;
+                canMove = false;
+            }
+        }
+    }
+    public void CanBury(int canBury)
+    {
+        if (canBury == 1)
+            canMove = true;
+        else
+            canMove = false;
     }
     private void OnTriggerEnter(Collider other)
     {
         if (enemyMovemenType == EnemyMovementType.burying)
         {
             if (borders.Contains(other)) //если наткнулись на границу
+            {
+                timer += Time.fixedDeltaTime; //если он движется в закопаном состоянии
                 rigidB.velocity = -rigidB.velocity;
+                transform.forward = rigidB.velocity;
+            }
             else
                 timer += Time.fixedDeltaTime; //если он движется в закопаном состоянии
+        }
+        else if (enemyMovemenType == EnemyMovementType.flying)
+        {
+            if (borders.Contains(other)) //если наткнулись на границу
+            {
+                timer += Time.fixedDeltaTime; //если он движется в закопаном состоянии
+                rigidB.velocity = -rigidB.velocity;
+                transform.forward = rigidB.velocity;
+            }
+            else if (other.CompareTag("Obstacle") || other.CompareTag("Enemy"))
+            {
+                anim.SetTrigger("flyUp");
+                PlayerShoot.enemiesTr.Remove(transform);
+                timer += Time.fixedDeltaTime; //если он движется в закопаном состоянии
+            }
         }
     }
     private void OnTriggerStay(Collider other)
     {
         if (enemyMovemenType == EnemyMovementType.burying)
             timer += Time.fixedDeltaTime; //если он движется в закопаном состоянии
+        if(enemyMovemenType == EnemyMovementType.flying)
+        {
+            if (other.CompareTag("Obstacle") || other.CompareTag("Enemy"))
+                timer += Time.fixedDeltaTime;
+        }
+    }
+    private void OnTriggerExit(Collider other)
+    {
+        if(enemyMovemenType == EnemyMovementType.flying)
+        {
+            if (borders.Contains(other))
+                return;
+            if (other.CompareTag("Obstacle") || other.CompareTag("Enemy"))
+            {
+                anim.SetTrigger("flyDown");
+                PlayerShoot.enemiesTr.Add(transform);
+            }
+        }
     }
     private void OnCollisionEnter(Collision collision)
     {
@@ -168,7 +253,7 @@ public class EnemiesMovement : MonoBehaviour
     {
         isFrostAttacked = true;
         float defaultSpeed = movementSpeed;
-        Material bodyMat = GetComponent<Renderer>().material;
+        Material bodyMat = GetComponent<Renderer>().material; //TEMP материал не у всех висит на теле
         Color defaultColor = bodyMat.color;
         bodyMat.color = Color.blue;
         movementSpeed *= 0.3f; //TEMP add animator speed 0.3

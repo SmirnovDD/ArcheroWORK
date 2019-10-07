@@ -21,9 +21,6 @@ public class ItemsFlyToPlayer : MonoBehaviour
     {
         GameController.OnLevelComplete -= LevelIsCleared;
     }
-    private void Start()
-    {
-    }
     private IEnumerator LerpToPlayer()
     {
         playerTr = GameObject.FindGameObjectWithTag("Player").transform;

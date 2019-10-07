@@ -10,7 +10,7 @@ public class EnemyShoot : MonoBehaviour
         homing,
         aimWithRicochet,
         straightShotNoAim,
-        burying
+        flyingStraightShot
     };
     public ShootType shootType;
 
@@ -33,6 +33,8 @@ public class EnemyShoot : MonoBehaviour
     private RaycastHit hit; //то же самое, что в скрипте снаряда
     private int obstaclesAndPlayerLayerMask = (1 << 10) | (1 << 11) | (1 << 12);
     private float timer;
+
+    private EnemiesMovement em; //для летающего врага
     void Start()
     {
         anim = GetComponent<Animator>();
@@ -46,6 +48,10 @@ public class EnemyShoot : MonoBehaviour
             lineR = GetComponent<LineRenderer>();
             lineR.SetPosition(0, thisTr.position);
             lineR.SetPosition(1, playerTr.position);
+        }        
+        else if(shootType == ShootType.flyingStraightShot)
+        {
+            em = GetComponent<EnemiesMovement>();
         }
     }
 
@@ -111,11 +117,12 @@ public class EnemyShoot : MonoBehaviour
             thisTr.rotation = Quaternion.Euler(0, thisTr.rotation.eulerAngles.y, 0);
             GameObject newArrow = Instantiate(straightFlightArrow, shootPoint.position, transform.rotation);
         }
-        else if(shootType == ShootType.burying)
+        else if(shootType == ShootType.flyingStraightShot)
         {
             thisTr.LookAt(playerTr);
             thisTr.rotation = Quaternion.Euler(0, thisTr.rotation.eulerAngles.y, 0);
             GameObject newArrow = Instantiate(straightFlightArrow, shootPoint.position, transform.rotation);
+            em.canMove = true;
         }
     }
 
